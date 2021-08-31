@@ -475,7 +475,7 @@ num_classes = 10
 epochs = 25     # 20
 max_lr = 0.5 # 0.01
 margin = 1.0 #2.0
-output_dim = 10
+output_dim = 2
 
 grad_clip = 0.1 #0.1  # if ||g|| > u, g <- gu/||g||
 weight_decay = 1e-4
