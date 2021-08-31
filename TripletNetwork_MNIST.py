@@ -175,8 +175,8 @@ class TripletDataset(Dataset):
         return (self.Anchor,self.Positive,self.Negative),torch.tensor(self.Labels)
 
 #Load Data
-train_dataset = MNIST(root='dataset/', train=True, transform=ToTensor(), download='True')
-test_dataset = MNIST(root='dataset/', train=False, transform=ToTensor(), download='True')
+train_dataset = MNIST(root='dataset/', train=True, transform=preprocess, download='True')
+test_dataset = MNIST(root='dataset/', train=False, transform=preprocess, download='True')
 
 #Data to triplet format
 batch_size = 64 # 256(Fashion, MNIST)
