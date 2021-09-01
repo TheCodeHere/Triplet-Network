@@ -474,7 +474,7 @@ output_dim = 2
 
 grad_clip = 0.1 #0.1  # if ||g|| > u, g <- gu/||g||
 weight_decay = 1e-4
-opt_func = torch.optim.RMSprop #RMSprop SGD Adam
+opt_func = torch.optim.SGD #RMSprop SGD Adam
 
 print(f"Output dimension: {output_dim}\n")
 
