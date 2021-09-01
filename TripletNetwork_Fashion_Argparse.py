@@ -489,7 +489,7 @@ opt_func = torch.optim.RMSprop #RMSprop SGD
 print(f"Output dimension: {output_dim}\n")
 
 # Model (on Device)
-tripletNetwork_model = to_device(ResNet_size(size=10, in_channels=1, output_size=output_dim, margin=margin), device)
+tripletNetwork_model = to_device(ResNet_size(size=18, in_channels=1, output_size=output_dim, margin=margin), device)
 
 # Train ResNet
 print(f"[{datetime.now()}]")
