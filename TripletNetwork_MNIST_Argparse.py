@@ -353,7 +353,7 @@ class Triplet_Network(nn.Module):
         return loss
 
     def extract_embedding(self, dataset):
-        size_batch = len(dataset)//10 #change this if not enough memory
+        size_batch = len(dataset)//30 #change this if not enough memory
 
         data_loader = DataLoader(dataset=dataset, batch_size=size_batch, shuffle=False)
         data_loader = DeviceDataLoader(data_loader, 'cuda')
@@ -435,16 +435,6 @@ def fit(epochs, max_lr, model, train_loader, val_loader, weight_decay=0.0, grad_
     mean_loss = 0
     for epoch in range(epochs):
         model.train()  # tells the model is in training mode, so batchnorm, dropout and all the ohter layer that have a training mode should get to the training mode
-        '''
-        # Freeze BN layers
-        for module in model.modules():
-            if isinstance(module, torch.nn.modules.BatchNorm2d):
-                module.eval()
-            if isinstance(module, torch.nn.modules.BatchNorm1d):
-                module.eval()
-            if isinstance(module, torch.nn.modules.BatchNorm3d):
-                module.eval()
-        '''
 
         train_losses = []
         lrs = []
