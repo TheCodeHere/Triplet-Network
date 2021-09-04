@@ -346,7 +346,7 @@ class Triplet_Network(nn.Module):
         return loss
 
     def extract_embedding(self, dataset):
-        size_batch = len(dataset)//10 #change this if not enough memory
+        size_batch = len(dataset)//30 #change this if not enough memory
 
         data_loader = DataLoader(dataset=dataset, batch_size=size_batch, shuffle=False)
         data_loader = DeviceDataLoader(data_loader, 'cuda')
