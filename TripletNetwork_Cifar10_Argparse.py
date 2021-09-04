@@ -434,16 +434,6 @@ def fit(epochs, max_lr, model, train_loader, val_loader, weight_decay=0.0, grad_
     mean_loss = 0
     for epoch in range(epochs):
         model.train()  # tells the model is in training mode, so batchnorm, dropout and all the ohter layer that have a training mode should get to the training mode
-        '''
-        # Freeze BN layers
-        for module in model.modules():
-            if isinstance(module, torch.nn.modules.BatchNorm2d):
-                module.eval()
-            if isinstance(module, torch.nn.modules.BatchNorm1d):
-                module.eval()
-            if isinstance(module, torch.nn.modules.BatchNorm3d):
-                module.eval()
-        '''
 
         train_losses = []
         lrs = []
@@ -521,12 +511,12 @@ print("\nPLOTTING NEW SPACE\n")
 
 embeddings_plot, labels_plot = tripletNetwork_model.extract_embedding(train_dataset)
 
+''' uncomment if you want to plot the resulting embeddings
 if output_dim == 2:
     Ploting2D(embeddings_plot.T, labels_plot, "Learned Data Space")
-
 if output_dim == 3:
     Ploting3D(embeddings_plot.T, labels_plot, "Learned Data Space")
-
+'''
 ########################################### Evaluation ##############################################################
 knn = KNeighborsClassifier(n_neighbors=1)  # algorithm auto = ball_tree, kd_tree or brute
 knn.fit(embeddings_plot, labels_plot)
@@ -535,17 +525,18 @@ print("\nPLOTTING GENERALIZATION\n")
 
 embeddings_plot, labels_plot = tripletNetwork_model.extract_embedding(test_dataset)
 
+''' uncomment if you want to plot the resulting embeddings
 if output_dim == 2:
     Ploting2D(embeddings_plot.T, labels_plot, "Learned Data Embedding")
-
 if output_dim == 3:
     Ploting3D(embeddings_plot.T, labels_plot, "Learned Data Embedding")
-
+'''
 ########################################### Evaluation ##############################################################
 y_pred = knn.predict(embeddings_plot)
 
 Metrics(labels_plot, y_pred)
 #####################################################################################################################
-
+''' uncomment if you want to plot the resulting embeddings
 if output_dim <= 3:
     plt.show()
+'''
