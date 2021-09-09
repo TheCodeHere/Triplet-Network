@@ -1,5 +1,6 @@
 dataset/
 Results/*
+!Results/.gitkeep
 Log/TripletNet/Fashion/2d/*
 Log/TripletNet/MNIST/2d/*
 Log/TripletNet/Cifar10/2d/*

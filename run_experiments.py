@@ -21,8 +21,8 @@ for lr in lr_list:
             for bs in bs_list:
                 print(f"RUNING... BS:{bs} EPS:{eps} M:{m} LR:{lr}")
                 # subprocess.call(f'python3 /{current_abs_path}/TripletNetwork_MNIST_Argparse.py -bs={bs} -eps={eps} -lr={lr} -m={m}',shell=True)
-                subprocess.call(f'python3 /{current_abs_path}/TripletNetwork_Fashion_Argparse.py -bs={bs} -eps={eps} -lr={lr} -m={m}',shell=True)
-                # subprocess.call(f'python3 /{current_abs_path}/TripletNetwork_Cifar10_Argparse.py -bs={bs} -eps={eps} -lr={lr} -m={m}',shell=True)
+                # subprocess.call(f'python3 /{current_abs_path}/TripletNetwork_Fashion_Argparse.py -bs={bs} -eps={eps} -lr={lr} -m={m}',shell=True)
+                subprocess.call(f'python3 /{current_abs_path}/TripletNetwork_Cifar10_Argparse.py -bs={bs} -eps={eps} -lr={lr} -m={m}',shell=True)
 
 print("FINISHING GRIDSEARCH...")
 end = time.time()-start

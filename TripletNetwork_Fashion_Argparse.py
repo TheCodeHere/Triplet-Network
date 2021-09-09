@@ -1,4 +1,3 @@
-
 from six.moves import urllib
 opener = urllib.request.build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -9,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.datasets import MNIST
+from torchvision.datasets import FashionMNIST
 from torchvision import transforms
 from torchvision.transforms import ToTensor
 from torch.utils.data.dataloader import DataLoader
@@ -20,8 +19,8 @@ from itertools import permutations
 from datetime import datetime
 import time
 from sklearn.neighbors import KNeighborsClassifier
-import os
 from sklearn import metrics
+import os
 ###########################################################
 import argparse
 
@@ -36,19 +35,14 @@ args = parser.parse_args()
 # Current Absolute Path
 current_abs_path = os.path.abspath(os.getcwd())
 
-#print(args.batch_size)
-#print(args.epochs)
-#print(args.learn_rate)
-#print(args.margin)
-
 ###########################################################
 
 def SaveResultsToFile(final_metrics, model_date_time):
-    test_params = final_metrics + [batch_size, epochs, max_lr, margin, f'mnist_{model_date_time}']
+    test_params = final_metrics + [batch_size, epochs, max_lr, margin, f'Fashion_{model_date_time}']
     a = np.asarray(test_params)
 
     # Open file and append experiment results
-    with open(f"{current_abs_path}/Results/mnist-results.csv", "ab") as f:
+    with open(f"{current_abs_path}/Results/fashion-results.csv", "ab") as f:
         np.savetxt(f, a.reshape(1, a.shape[0]), delimiter=',', fmt='%s', newline = "\n")
 
 def Metrics(y_real, y_pred):
@@ -61,7 +55,7 @@ def Metrics(y_real, y_pred):
 #####################################################################################################################
 print("\nLOAD DATA\n")
 
-mean, std = 0.1307, 0.3081 #MNIST
+mean, std = 0.28604059698879553, 0.35302424451492237 #Fashion
 
 preprocess = transforms.Compose([
     transforms.ToTensor(),
@@ -143,11 +137,11 @@ class TripletDataset(Dataset):
         return (self.Anchor,self.Positive,self.Negative),torch.tensor(self.Labels)
 
 #Load Data
-train_dataset = MNIST(root='dataset/', train=True, transform=preprocess, download='True')
-test_dataset = MNIST(root='dataset/', train=False, transform=preprocess, download='True')
+train_dataset = FashionMNIST(root='dataset/', train=True, transform=preprocess, download='True')
+test_dataset = FashionMNIST(root='dataset/', train=False, transform=preprocess, download='True')
 
 #Data to triplet format
-batch_size = args.batch_size #64 <-----------------------------------------------------------------------------------------
+batch_size = args.batch_size #256 <-----------------------------------------------------------------------------------------
 triplet_train_ds = TripletDataset(dataset=train_dataset, batch_size=batch_size)
 
 # Create validation & training datasets
@@ -202,7 +196,7 @@ train_ld = DeviceDataLoader(triplet_train_ld, device)
 val_ld = DeviceDataLoader(triplet_val_ld, device)
 
 #####################################################################################################################
-print("\nTRIPLET NETWORK TRAINING\n")
+print("\nTriplet Network TRAINING\n")
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -379,7 +373,7 @@ def fit(epochs, max_lr, model, train_loader, val_loader, weight_decay=0.0, grad_
     # Set up cutom optimizer with weight decay
     optimizer = opt_func(model.parameters(), max_lr, weight_decay=weight_decay)
     # Set up learning rate scheduler
-    sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.20, patience=2, verbose=True)
+    sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.20, patience=3, verbose=True)
     #sched = torch.optim.lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
 
     mean_loss = 0
@@ -404,7 +398,6 @@ def fit(epochs, max_lr, model, train_loader, val_loader, weight_decay=0.0, grad_
                 nn.utils.clip_grad_value_(model.parameters(), grad_clip)
 
             optimizer.step()  # Adjust the weights
-            #optimizer.zero_grad()  # Reset the gradients
 
         # Record & update learning rate
         mean_loss = torch.tensor(train_losses).mean().item()
@@ -432,7 +425,7 @@ output_dim = 2
 
 grad_clip = 0.1 #0.1  # if ||g|| > u, g <- gu/||g||
 weight_decay = 1e-4
-opt_func = torch.optim.SGD #RMSprop SGD Adam
+opt_func = torch.optim.SGD #RMSprop SGD
 
 print(f"Output dimension: {output_dim}\n")
 
@@ -452,9 +445,10 @@ print(f"\nTotal time = {int(end//3600):02d}:{int((end//60))%60:02d}:{end%60:.6f}
 print("\nSAVING Triplet Network MODEL\n")
 '''The .state_dict method returns an OrderedDict containing all the weights and bias matrices mapped to the right attributes of the model'''
 
+
 _now = datetime.now() # current date and time
 model_date_time = _now.strftime("%m.%d.%Y.%H:%M:%S")
-File_name = "Log/TripletNet/MNIST/" + str(output_dim) + "d/MNIST_" + model_date_time+ ".pth"
+File_name = f"{current_abs_path}/Log/TripletNet/Fashion/" + str(output_dim) + "d/Fashion_" + model_date_time + ".pth"
 
 torch.save(tripletNetwork_model.state_dict(), File_name)
 #####################################################################################################################
@@ -465,7 +459,7 @@ torch.cuda.empty_cache() # PyTorch thing
 embeddings_plot, labels_plot = tripletNetwork_model.extract_embedding(train_dataset)
 
 ########################################### Evaluation ##############################################################
-knn = KNeighborsClassifier(n_neighbors=1) #algorithm auto = ball_tree, kd_tree or brute
+knn = KNeighborsClassifier(n_neighbors=1)  # algorithm auto = ball_tree, kd_tree or brute
 knn.fit(embeddings_plot, labels_plot)
 #####################################################################################################################
 
