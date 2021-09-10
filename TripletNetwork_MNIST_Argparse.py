@@ -6,26 +6,21 @@ urllib.request.install_opener(opener)
 
 import torch
 import numpy as np
-import torchvision
-import matplotlib
 import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.datasets import MNIST
 from torchvision import transforms
 from torchvision.transforms import ToTensor
-#from torchvision.utils import make_grid
-#from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data import random_split
 from torch.utils.data import Dataset
-#from torch.utils.data import Subset
 from torch.nn.modules.loss import TripletMarginLoss
-#from collections import Counter
 from itertools import permutations
 from datetime import datetime
 import time
 from sklearn.neighbors import KNeighborsClassifier
+import os
 from sklearn import metrics
 ###########################################################
 import argparse
@@ -38,6 +33,9 @@ parser.add_argument('-m','--margin', type=float, metavar='', required=True, help
 
 args = parser.parse_args()
 
+# Current Absolute Path
+current_abs_path = os.path.abspath(os.getcwd())
+
 #print(args.batch_size)
 #print(args.epochs)
 #print(args.learn_rate)
@@ -45,68 +43,20 @@ args = parser.parse_args()
 
 ###########################################################
 
+def SaveResultsToFile(final_metrics, model_date_time):
+    test_params = final_metrics + [batch_size, epochs, max_lr, margin, f'mnist_{model_date_time}']
+    a = np.asarray(test_params)
+
+    # Open file and append experiment results
+    with open(f"{current_abs_path}/Results/mnist-results.csv", "ab") as f:
+        np.savetxt(f, a.reshape(1, a.shape[0]), delimiter=',', fmt='%s', newline = "\n")
+
 def Metrics(y_real, y_pred):
-    print("The average scores for all classes:")
-    # Calculate metrics for each label, and find their unweighted mean. does not take label imbalance into account.
-    print("\nAccuracy:  {:.2f}%".format(
-        metrics.accuracy_score(y_real, y_pred) * 100))  # (TP+TN)/Total / number of classes
-    print("Precision: {:.2f}%".format(
-        metrics.precision_score(y_real, y_pred, average='macro') * 100))  # TP/(TP+FP) / number of classes
-    print("Recall:    {:.2f}%".format(
-        metrics.recall_score(y_real, y_pred, average='macro') * 100))  # TP/(TP+FN) / number of classes
-    print("F-measure: {:.2f}%".format(
-        metrics.f1_score(y_real, y_pred, average='macro') * 100))  # 2 * (prec*rec)/(prec+rec) / number of classes
-
-    print("\nThe scores for each class:")
-    precision, recall, fscore, support = metrics.precision_recall_fscore_support(y_real, y_pred)
-
-    print("\n|    Label    |  Precision |  Recall  | F1-Score | Support")
-    print("|-------------|------------|----------|----------|---------")
-    for i in range(num_classes):
-        print(
-            f"| {classes[i]:<11} |  {precision[i] * 100:<7.2f}%  | {recall[i] * 100:<7.2f}% |   {fscore[i]:<4.2f}   | {support[i]}")
-
-color = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
-marker = ['.','+','x','1','^','s','p','*','d','X']
-classes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-
-def Ploting2D(embeddings_plot,labels_plot,tit="default",x_axis="X",y_axis="Y"):
-    ax = plt.figure().add_subplot(111)
-    for i in range(num_classes):
-        index = labels_plot == i
-        plt.scatter(embeddings_plot[0, index], embeddings_plot[1, index], s=3, marker='.', c=color[i], label=classes[i])
-    ax.legend(loc='best', title="Labels", markerscale=5.0)
-
-    # add grid
-    plt.grid(True,linestyle='--')
-
-    # add title
-    plt.title(tit)
-    plt.tight_layout()
-
-    # add x,y axes labels
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    #plt.legend(loc='upper left')
-
-def Ploting3D(embeddings_plot, labels_plot, tit="default",x_axis="X",y_axis="Y",z_axis="Z"):
-    ax = plt.figure().gca(projection='3d')
-    for i in range(num_classes):
-        index = labels_plot == i
-        ax.scatter(embeddings_plot[0, index], embeddings_plot[1, index], embeddings_plot[2, index], s=3, marker='.',c=color[i], label=classes[i])
-    ax.legend(loc='best', title="Labels", markerscale=5.0)
-
-    # add grid
-    #plt.grid(linestyle='--')
-
-    # add title
-    plt.title(tit)
-    plt.tight_layout()
-
-    # add x,y axes labels
-    ax.set_xlabel(x_axis)
-    ax.set_ylabel(y_axis)
-    ax.set_zlabel(z_axis)
+    accuracy_score = metrics.accuracy_score(y_real, y_pred) * 100
+    precision_score = metrics.precision_score(y_real, y_pred, average='macro') * 100
+    recall_score = metrics.recall_score(y_real, y_pred, average='macro') * 100
+    f1_score = metrics.f1_score(y_real, y_pred, average='macro') * 100
+    return [accuracy_score, precision_score, recall_score, f1_score]
 
 #####################################################################################################################
 print("\nLOAD DATA\n")
@@ -135,9 +85,9 @@ class TripletDataset(Dataset):
 
         for i, j in lab_set_perm:
             a, p, n = self.Triplets_maker(samples[i], samples[j])
-            self.Anchor = torch.cat((self.Anchor, a), 0)
-            self.Positive = torch.cat((self.Positive, p), 0)
-            self.Negative = torch.cat((self.Negative, n), 0)
+            self.Anchor = torch.cat((self.Anchor, a.float()), 0)
+            self.Positive = torch.cat((self.Positive, p.float()), 0)
+            self.Negative = torch.cat((self.Negative, n.float()), 0)
             self.Labels += [[i, j] for _ in range(self.batch_size)]
 
         print(f"Number of labels permutations: {len(lab_set_perm)}")
@@ -502,43 +452,28 @@ print(f"\nTotal time = {int(end//3600):02d}:{int((end//60))%60:02d}:{end%60:.6f}
 print("\nSAVING Triplet Network MODEL\n")
 '''The .state_dict method returns an OrderedDict containing all the weights and bias matrices mapped to the right attributes of the model'''
 
-File_name = "Log/TripletNet/MNIST/" + str(output_dim) + "d/MNIST_" + str(mean_loss) + ".pth"
+_now = datetime.now() # current date and time
+model_date_time = _now.strftime("%m.%d.%Y.%H:%M:%S")
+File_name = "Log/TripletNet/MNIST/" + str(output_dim) + "d/MNIST_" + model_date_time+ ".pth"
 
 torch.save(tripletNetwork_model.state_dict(), File_name)
 #####################################################################################################################
 del train_ld, val_ld
 torch.cuda.empty_cache() # PyTorch thing
 #####################################################################################################################
-print("\nPLOTTING NEW SPACE\n")
 
 embeddings_plot, labels_plot = tripletNetwork_model.extract_embedding(train_dataset)
 
-''' uncomment if you want to plot the resulting embeddings
-if output_dim == 2:
-    Ploting2D(embeddings_plot.T, labels_plot, "Learned Data Space")
-if output_dim == 3:
-    Ploting3D(embeddings_plot.T, labels_plot, "Learned Data Space")
-'''
 ########################################### Evaluation ##############################################################
 knn = KNeighborsClassifier(n_neighbors=1) #algorithm auto = ball_tree, kd_tree or brute
 knn.fit(embeddings_plot, labels_plot)
 #####################################################################################################################
-print("\nPLOTTING GENERALIZATION\n")
 
 embeddings_plot, labels_plot = tripletNetwork_model.extract_embedding(test_dataset)
 
-''' uncomment if you want to plot the resulting embeddings
-if output_dim == 2:
-    Ploting2D(embeddings_plot.T, labels_plot, "Learned Data Embedding")
-if output_dim == 3:
-    Ploting3D(embeddings_plot.T, labels_plot, "Learned Data Embedding")
-'''
 ########################################### Evaluation ##############################################################
 y_pred = knn.predict(embeddings_plot)
 
-Metrics(labels_plot, y_pred)
+SaveResultsToFile(Metrics(labels_plot, y_pred), model_date_time)
 #####################################################################################################################
-''' uncomment if you want to plot the resulting embeddings
-if output_dim <= 3:
-    plt.show()
-'''
+
