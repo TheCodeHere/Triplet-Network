@@ -176,7 +176,7 @@ train_dataset = MNIST(root='dataset/', train=True, transform=preprocess, downloa
 test_dataset = MNIST(root='dataset/', train=False, transform=preprocess, download='True')
 
 #Data to triplet format
-batch_size = 412 # 512(Fashion, MNIST)
+batch_size = 512 # 512(Fashion, MNIST)
 triplet_train_ds = TripletDataset(dataset=train_dataset, batch_size=batch_size)
 
 # Create validation & training d atasets
@@ -209,23 +209,14 @@ def to_device(data, device):
 
 class DeviceDataLoader():
     """Wrap a dataloader to move data to a device"""
-    def __init__(self, data, device, yield_labels=False):
+    def __init__(self, data, device):
         self.data = data
         self.device = device
-        self.yield_labels = yield_labels
 
     def __iter__(self):
         """Yield a batch of data after moving it to device"""
         for data in self.data:
             yield to_device(data, self.device)
-        '''
-        if self.yield_labels:
-            for data, l in self.data:
-                yield to_device(data, self.device), l
-        else:
-            for data in self.data:
-                yield to_device(data, self.device)
-        '''
 
     def __len__(self):
         """Number of batches"""
@@ -417,16 +408,6 @@ def fit(epochs, max_lr, model, train_loader, val_loader, weight_decay=0.0, grad_
 
     for epoch in range(epochs):
         model.train()  # tells the model is in training mode, so batchnorm, dropout and all the ohter layer that have a training mode should get to the training mode
-        '''
-        # Freeze BN layers
-        for module in model.modules():
-            if isinstance(module, torch.nn.modules.BatchNorm2d):
-                module.eval()
-            if isinstance(module, torch.nn.modules.BatchNorm1d):
-                module.eval()
-            if isinstance(module, torch.nn.modules.BatchNorm3d):
-                module.eval()
-        '''
 
         train_losses = []
         lrs = []
@@ -463,7 +444,7 @@ def fit(epochs, max_lr, model, train_loader, val_loader, weight_decay=0.0, grad_
 # Parameters
 num_classes = 10
 output_dim = 2
-epochs = 50 #50
+epochs = 50
 max_lr = 0.5
 margin = 10.0
 
