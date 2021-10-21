@@ -498,11 +498,11 @@ y_pred = knn.predict(query_embeddings)
 
 recall = Metrics(query_labels, y_pred)
 
-AccuracyCalculator( exclude=("AMI","mean_average_precision"),
+calculator = AccuracyCalculator( exclude=("AMI","mean_average_precision"),
                     avg_of_avgs=False,
                     k=1,
                     label_comparison_fn=None)
-calculator = AccuracyCalculator()
+
 acc_dict = calculator.get_accuracy(query_embeddings, reference_embeddings, query_labels, reference_labels, embeddings_come_from_same_source=False)
 
 print("\nNMI: ", acc_dict["NMI"]*100)
