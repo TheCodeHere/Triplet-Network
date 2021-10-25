@@ -176,7 +176,7 @@ train_dataset = CIFAR10(root='dataset/', train=True, transform=preprocess, downl
 test_dataset = CIFAR10(root='dataset/', train=False, transform=preprocess, download='True')
 
 #Data to triplet format
-batch_size = 320 #412
+batch_size = 512 #320
 triplet_train_ds = TripletDataset(dataset=train_dataset, batch_size=batch_size)
 
 # Create validation & training datasets
