@@ -2,6 +2,7 @@
 Script that contains Siamese and TripleDataset classes that create combinations used to train those models
 """
 import os
+import time
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, Sampler
@@ -9,6 +10,7 @@ from torch.utils.data.dataloader import DataLoader
 from skimage import io
 import numpy as np
 from itertools import permutations, product
+from torchvision import transforms
 
 
 class KidneyStones(Dataset):
