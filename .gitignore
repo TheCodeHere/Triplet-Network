@@ -7,3 +7,5 @@ Log/TripletNet/Cifar10/2d/*
 !Log/TripletNet/Fashion/2d/.gitkeep
 !Log/TripletNet/MNIST/2d/.gitkeep
 !Log/TripletNet/Cifar10/2d/.gitkeep
+
+.idea
